@@ -1,35 +1,32 @@
-package at.fhtw.sampleapp.service.users;
+package at.fhtw.sampleapp.service.tradings;
 
 import at.fhtw.httpserver.http.ContentType;
 import at.fhtw.httpserver.http.HttpStatus;
 import at.fhtw.httpserver.server.Request;
 import at.fhtw.httpserver.server.Response;
 import at.fhtw.sampleapp.controller.Controller;
-import at.fhtw.sampleapp.model.Users;
 import at.fhtw.sampleapp.model.Token;
+import at.fhtw.sampleapp.model.Trade;
+import at.fhtw.sampleapp.model.Cards;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import at.fhtw.sampleapp.model.Users;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import java.sql.SQLException;
-import java.util.List;
 
-public class UsersController extends Controller {
-    private UsersDAL usersDAL;
+public class TradingsController extends Controller {
+    private TradingsDAL tradingsDAL;
 
-    public UsersController(UsersDAL usersDAL) {
+    public TradingsController(TradingsDAL tradingsDAL) {
 
-        this.usersDAL = usersDAL;
+        this.tradingsDAL = tradingsDAL;
     }
 
-    //GET /score
-    public Response getUsersScore(Request request) throws SQLException {
+    //GET /tradings  shows available tradings
+    public Response getDeals(Request request) throws SQLException {
         try {
             Token token = new Token();
-            String path = request.getPathParts().get(0);
-            System.out.println("getUsersStats Path::" + path + "::");
             token.setToken_id(request.getHeaderMap().getHeader("Authorization"));
-            String message = this.usersDAL.getUsersScore(token);
+            String message = this.tradingsDAL.getDeals(token);
             String responseCode[] = message.split("/", 2);
             System.out.println("Return  Code " + responseCode[0]);
 
@@ -39,50 +36,17 @@ public class UsersController extends Controller {
                         ContentType.JSON,
                         responseCode[1]
                 );
-            } else if (responseCode[0].equals("401")) {
-                return new Response(
-                        HttpStatus.UNAUTHORIZED,
-                        ContentType.JSON,
-                        "{ \"message\" : \"Unauthorized\" }"
-                );
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        return new Response(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                ContentType.JSON,
-                "{ \"message\" : \"Internal Server Error\" }"
-        );
-    }
-    //GET /stats
-    public Response getUsersStats(Request request) throws SQLException {
-        try {
-            Token token = new Token();
-            String path = request.getPathParts().get(0);
-            System.out.println("getUsersStats Path::" + path + "::");
-            token.setToken_id(request.getHeaderMap().getHeader("Authorization"));
-            String message = this.usersDAL.getUsersStats(token);
-            String responseCode[] = message.split("/", 2);
-            System.out.println("Return  Code " + responseCode[0]);
-
-            if (responseCode[0].equals("200")) {
-                return new Response(
-                        HttpStatus.OK,
-                        ContentType.JSON,
-                        responseCode[1]
-                );
-            } else if (responseCode[0].equals("401")) {
-                return new Response(
-                        HttpStatus.UNAUTHORIZED,
-                        ContentType.JSON,
-                        "{ \"message\" : \"Unauthorized\" }"
-                );
-            } else if (responseCode[0].equals("404")) {
+            } else if (responseCode[0].equals("404")) {  // no deals available
                 return new Response(
                         HttpStatus.NOT_FOUND,
                         ContentType.JSON,
-                        "{ \"message\" : \"Not Found\" }"
+                        "{ \"message\" : \"No Content\" }"
+                );
+            }else if (responseCode[0].equals("401")) {
+                return new Response(
+                        HttpStatus.UNAUTHORIZED,
+                        ContentType.JSON,
+                        "{ \"message\" : \"Unauthorized\" }"
                 );
             }
         } catch (SQLException e) {
@@ -94,23 +58,25 @@ public class UsersController extends Controller {
                 "{ \"message\" : \"Internal Server Error\" }"
         );
     }
-    // PUT /users data
-    public Response updateUsers(Request request) throws SQLException {
+
+    // POST /tradings  insert a new trading deal into DB
+    public Response createDeals(Request request) throws SQLException {
         //Users usersData = this.usersDAL.getUsers(Integer.parseInt(id));
+        System.out.println("tradings create Deals active");
         try {
             Token token = new Token();
-            Users user = new Users();
-            String username = request.getPathParts().get(1);
+            Trade trade = new Trade();
+            System.out.println("tradings create Deals active");
             token.setToken_id(request.getHeaderMap().getHeader("Authorization"));
-            user = this.getObjectMapper().readValue(request.getBody(), Users.class);
-            Integer responseCode = this.usersDAL.updateUsers(username, token, user);
+            trade = this.getObjectMapper().readValue(request.getBody(), Trade.class);
+            Integer responseCode = this.tradingsDAL.createDeals(token, trade);
             System.out.println("Return  Code " + responseCode);
 
-            if (responseCode == 200) {
+            if (responseCode == 201) {
                 return new Response(
-                        HttpStatus.OK,
+                        HttpStatus.CREATED,
                         ContentType.JSON,
-                        "{ \"message\" : \"OK\" }"
+                        "{ \"message\" : \"created\" }"
                 );
             } else if (responseCode == 401) {
                 return new Response(
@@ -118,11 +84,17 @@ public class UsersController extends Controller {
                         ContentType.JSON,
                         "{ \"message\" : \"Unauthorized\" }"
                 );
-            } else if (responseCode == 404) {
+            } else if (responseCode == 403) {
                 return new Response(
-                        HttpStatus.NOT_FOUND,
+                        HttpStatus.FORBIDDEN,
                         ContentType.JSON,
-                        "{ \"message\" : \"Not Found\" }"
+                        "{ \"message\" : \"Forbidden\" }"
+                );
+            } else if (responseCode == 409) {
+                return new Response(
+                        HttpStatus.CONFLICT,
+                        ContentType.JSON,
+                        "{ \"message\" : \"Conflict\" }\n"
                 );
             }
         } catch (SQLException e) {
@@ -138,37 +110,49 @@ public class UsersController extends Controller {
                 "{ \"message\" : \"Internal Server Error\" }"
         );
     }
-    // GET /users data
-    public Response getUsers(Request request) throws SQLException {
+
+    // DELETE /tradings/trade_id
+    public Response deleteDeals(Request request) throws SQLException {
         //Users usersData = this.usersDAL.getUsers(Integer.parseInt(id));
+        System.out.println("tradings - delete Deals active");
         try {
             Token token = new Token();
-            String path = request.getPathParts().get(0);
-            System.out.println("getUsers Path::" + path + "::");
-            String username = request.getPathParts().get(1);
+            Trade trade = new Trade();
             token.setToken_id(request.getHeaderMap().getHeader("Authorization"));
-            String message = this.usersDAL.getUsers(username, token);
-            // String usersDataJSON = this.getObjectMapper().writeValueAsString(usersData);
-            String responseCode[] = message.split("/", 2);
-            System.out.println("Return  Code " + responseCode[0]);
+            trade.setTrade_id(request.getPathParts().get(1));
+            System.out.println("tradings - delete Deals active" + trade.getTrade_id());
+            Integer responseCode = this.tradingsDAL.deleteDeals(token, trade);
+            System.out.println("Return  Code " + responseCode);
 
-            if (responseCode[0].equals("200")) {
+            if (responseCode == 200) {
                 return new Response(
                         HttpStatus.OK,
                         ContentType.JSON,
-                        responseCode[1]
+                        "{ \"message\" : \"OK\" }"
                 );
-            } else if (responseCode[0].equals("401")) {
+            } else if (responseCode == 401) {
                 return new Response(
                         HttpStatus.UNAUTHORIZED,
                         ContentType.JSON,
                         "{ \"message\" : \"Unauthorized\" }"
                 );
-            } else if (responseCode[0].equals("404")) {
+            } else if (responseCode == 403) {
+                return new Response(
+                        HttpStatus.FORBIDDEN,
+                        ContentType.JSON,
+                        "{ \"message\" : \"Forbidden\" }"
+                );
+            } else if (responseCode == 404) {
                 return new Response(
                         HttpStatus.NOT_FOUND,
                         ContentType.JSON,
-                        "{ \"message\" : \"Not Found\" }"
+                        "{ \"message\" : \"Not Found\" }\n"
+                );
+            } else if (responseCode == 409) {
+                return new Response(
+                        HttpStatus.CONFLICT,
+                        ContentType.JSON,
+                        "{ \"message\" : \"Conflict\" }\n"
                 );
             }
         } catch (SQLException e) {
@@ -180,34 +164,50 @@ public class UsersController extends Controller {
                 "{ \"message\" : \"Internal Server Error\" }"
         );
     }
-    // POST /users
-    public Response addUsers(Request request) {
-        try {
 
-            Users users = this.getObjectMapper().readValue(request.getBody(), Users.class);
-            System.out.println(users);
-            System.out.println(users.getUsername());
-            System.out.println(users.getPassword());
-            boolean userAdded = this.usersDAL.addUsers(users);
-            if(userAdded == true) {
+    // POST /tradings/trade_id
+    public Response executeDeals(Request request) throws SQLException {
+        //Users usersData = this.usersDAL.getUsers(Integer.parseInt(id));
+        System.out.println("tradings - EXECUTE Deals active");
+        try {
+            Token token = new Token();
+            Trade trade = new Trade();
+            Cards card = new Cards();
+            token.setToken_id(request.getHeaderMap().getHeader("Authorization"));
+            trade.setTrade_id(request.getPathParts().get(1));
+            String cardString = request.getBody();
+            System.out.println("tradings - execute Deals active" + trade.getTrade_id());
+            Integer responseCode = this.tradingsDAL.executeDeals(token, trade, cardString);
+            System.out.println("Return  Code " + responseCode);
+
+            if (responseCode == 200) {
                 return new Response(
-                        HttpStatus.CREATED,
+                        HttpStatus.OK,
                         ContentType.JSON,
-                        "{ message: \"Success\" }"
+                        "{ \"message\" : \"OK\" }"
                 );
-            } else {
+            } else if (responseCode == 401) {
                 return new Response(
-                        HttpStatus.CONFLICT,
+                        HttpStatus.UNAUTHORIZED,
                         ContentType.JSON,
-                        "{ message: \"failed\" }"
+                        "{ \"message\" : \"Unauthorized\" }"
+                );
+            } else if (responseCode == 403) {
+                return new Response(
+                        HttpStatus.FORBIDDEN,
+                        ContentType.JSON,
+                        "{ \"message\" : \"Forbidden\" }"
+                );
+            } else if (responseCode == 404) {
+                return new Response(
+                        HttpStatus.NOT_FOUND,
+                        ContentType.JSON,
+                        "{ \"message\" : \"Not Found\" }\n"
                 );
             }
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
         return new Response(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 ContentType.JSON,

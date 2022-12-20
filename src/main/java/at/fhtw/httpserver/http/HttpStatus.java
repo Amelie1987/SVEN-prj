@@ -2,7 +2,7 @@ package at.fhtw.httpserver.http;
 
 public enum HttpStatus {
     OK(200, "OK"),
-    CREATED(201, "CREATED"),
+    CREATED(201, "created"),
     ACCEPTED(202, "Accepted"),
     NO_CONTENT(204, "No Content"),
     BAD_REQUEST(400, "Bad Request"),

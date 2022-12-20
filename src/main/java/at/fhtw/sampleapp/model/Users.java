@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 public class Users {
 
     @JsonAlias({"Id"})
-    private String id;
+    private Integer id;
 
     @JsonAlias({"Username"})
     private String username;
@@ -37,7 +37,7 @@ public class Users {
     // Jackson needs the default constructor
     public Users() {}
 
-    public Users(String id, String username, String password, String name, String bio, String image, Integer elo, Integer wins, Integer losses, Integer coins) {
+    public Users(Integer id, String username, String password, String name, String bio, String image, Integer elo, Integer wins, Integer losses, Integer coins) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -50,7 +50,7 @@ public class Users {
         this.coins = coins;
     }
 
-    public void setId(String id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -90,7 +90,7 @@ public class Users {
         this.coins = coins;
     }
 
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 

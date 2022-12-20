@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.SQLException;
 
 public class RequestHandler implements Runnable {
     private Socket clientSocket;
@@ -44,6 +45,8 @@ public class RequestHandler implements Runnable {
             printWriter.write(response.get());
         } catch (IOException e) {
             System.err.println(Thread.currentThread().getName() + " Error: " + e.getMessage());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         } finally {
             try {
                 if (printWriter != null) {
