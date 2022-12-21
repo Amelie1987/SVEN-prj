@@ -1,4 +1,4 @@
-package at.fhtw.sampleapp.service.packages;
+package at.fhtw.sampleapp.service.tradings;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,24 +12,22 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-public class PackagesTest {
+public class TradingsTest {
 
-    //test if there is an error, when a card is double in a package
+    //test GET /tradings createDeal response Code 401 (token invalid)
     @Test
-    void testPackagesServiceInsertDoubleCard() throws Exception {
-        URL url = new URL("http://localhost:10001/packages");
+    void testTradingsServiceDealInvalidToken() throws Exception {
+        URL url = new URL("http://localhost:10001/tradings");
         URLConnection urlConnection = url.openConnection();
-        urlConnection.setRequestProperty ("Authorization", "Basic admin-mtcgToken");
+        urlConnection.setRequestProperty("Authorization", "Basic amelie-mtcgToken");
         urlConnection.setDoOutput(true);
         urlConnection.setRequestProperty("Method", "POST");
         // set body with outputstream
         OutputStream outputStream = urlConnection.getOutputStream();
         OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, "UTF-8");
-        outputStreamWriter.write("[{\"Id\":\"70962948-2bf7-44a9-9ded-8c68eeac7793\", \"Name\":\"WaterGoblin\", \"Damage\":  9.0}, " +
-                "{\"Id\":\"74635fae-8ad3-4295-9139-320ab89c2844\", \"Name\":\"FireSpell\", \"Damage\": 55.0}, " +
-                "{\"Id\":\"ce6bcaee-47e1-4011-a49e-5a4d7d4245f3\", \"Name\":\"Knight\", \"Damage\": 21.0}, " +
-                "{\"Id\":\"a6fde738-c65a-4b10-b400-6fef0fdb28ba\", \"Name\":\"FireSpell\", \"Damage\": 55.0}, " +
-                "{\"Id\":\"74635fae-8ad3-4295-9139-320ab89c2844\", \"Name\":\"FireSpell\", \"Damage\": 55.0}]");
+        outputStreamWriter.write("{\"Id\": \"6cd85277-4590-49d4-b0cf-ba0a921faad0\", " +
+                "\"CardToTrade\": \"1cb6ab86-bdb2-47e5-b6e4-68c5ab389334\", \"Type\": " +
+                "\"Monster\", \"MinimumDamage\": 30}");
         outputStreamWriter.flush();
         outputStreamWriter.close();
         outputStream.close();
@@ -38,51 +36,29 @@ public class PackagesTest {
             InputStream inputStream = urlConnection.getInputStream();
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            assertEquals(409, bufferedReader);
+            assertEquals(401, bufferedReader);
             urlConnection.getOutputStream().close();
             bufferedReader.close();
-        } catch (IOException e){
+        } catch (IOException e) {
             System.out.println("Exception: " + e);
         }
     }
 
-    //test if there is bad request when no cards are send = no body set
-    @Test
-    void testPackagesServiceInsertNoCards() throws Exception {
-        PackagesService packagesService = new PackagesService();
-        URL url = new URL("http://localhost:10001/packages");
-        URLConnection urlConnection = url.openConnection();
-        urlConnection.setRequestProperty ("Authorization", "Basic admin-mtcgToken");
-        urlConnection.setRequestProperty("Method", "POST");
-        urlConnection.connect();
-        try {
-            InputStream inputStream = urlConnection.getInputStream();
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            assertEquals(400, bufferedReader);          // BAD REQUEST
-            urlConnection.getOutputStream().close();
-            bufferedReader.close();
-        } catch (IOException e){
-            System.out.println("Exception: " + e);
-        }
-    }
 
-    //test if there is an error, when it is not the admins token
+    //test GET /tradings createDeal response Code 403 (forbidden - user does not own this card)
     @Test
-    void testPackagesServiceNoAdminToken() throws Exception {
-        URL url = new URL("http://localhost:10001/packages");
+    void testTradingsServiceUserDoesNotOwnTheCard() throws Exception {
+        URL url = new URL("http://localhost:10001/tradings");
         URLConnection urlConnection = url.openConnection();
-        urlConnection.setRequestProperty ("Authorization", "Basic kienboec-mtcgToken");
+        urlConnection.setRequestProperty("Authorization", "Basic admin-mtcgToken");
         urlConnection.setDoOutput(true);
         urlConnection.setRequestProperty("Method", "POST");
         // set body with outputstream
         OutputStream outputStream = urlConnection.getOutputStream();
         OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, "UTF-8");
-        outputStreamWriter.write("[{\"Id\":\"70962948-2bf7-44a9-9ded-8c68eeac7793\", \"Name\":\"WaterGoblin\", \"Damage\":  9.0}, " +
-                "{\"Id\":\"74635fae-8ad3-4295-9139-320ab89c2844\", \"Name\":\"FireSpell\", \"Damage\": 55.0}, " +
-                "{\"Id\":\"ce6bcaee-47e1-4011-a49e-5a4d7d4245f3\", \"Name\":\"Knight\", \"Damage\": 21.0}, " +
-                "{\"Id\":\"a6fde738-c65a-4b10-b400-6fef0fdb28ba\", \"Name\":\"FireSpell\", \"Damage\": 55.0}, " +
-                "{\"Id\":\"94635fae-8ad3-4295-9139-320ab89c2844\", \"Name\":\"Dragon\", \"Damage\": 50.0}]");
+        outputStreamWriter.write("{\"Id\": \"6cd85277-4590-49d4-b0cf-ba0a921faad0\", " +
+                "\"CardToTrade\": \"1cb6ab86-bdb2-47e5-b6e4-68c5ab389334\", \"Type\": " +
+                "\"Monster\", \"MinimumDamage\": 30}");
         outputStreamWriter.flush();
         outputStreamWriter.close();
         outputStream.close();
@@ -94,9 +70,38 @@ public class PackagesTest {
             assertEquals(403, bufferedReader);
             urlConnection.getOutputStream().close();
             bufferedReader.close();
-        } catch (IOException e){
+        } catch (IOException e) {
             System.out.println("Exception: " + e);
         }
     }
 
+    //test GET /tradings createDeal response Code 200 (success)
+    @Test
+    void testTradingsServiceValidDeal() throws Exception {
+        URL url = new URL("http://localhost:10001/tradings");
+        URLConnection urlConnection = url.openConnection();
+        urlConnection.setRequestProperty("Authorization", "Basic kienboec-mtcgToken");
+        urlConnection.setDoOutput(true);
+        urlConnection.setRequestProperty("Method", "POST");
+        // set body with outputstream
+        OutputStream outputStream = urlConnection.getOutputStream();
+        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(outputStream, "UTF-8");
+        outputStreamWriter.write("{\"Id\": \"6cd85277-4590-49d4-b0cf-ba0a921faad0\", " +
+                "\"CardToTrade\": \"1cb6ab86-bdb2-47e5-b6e4-68c5ab389334\", \"Type\": " +
+                "\"Monster\", \"MinimumDamage\": 15}");
+        outputStreamWriter.flush();
+        outputStreamWriter.close();
+        outputStream.close();
+        urlConnection.connect();
+        try {
+            InputStream inputStream = urlConnection.getInputStream();
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            assertEquals(200, bufferedReader);
+            urlConnection.getOutputStream().close();
+            bufferedReader.close();
+        } catch (IOException e) {
+            System.out.println("Exception: " + e);
+        }
+    }
 }

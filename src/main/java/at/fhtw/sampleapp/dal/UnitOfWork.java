@@ -6,11 +6,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class UnitOfWork {
+public class UnitOfWork /*implements AutoCloseable*/ {
     private Connection connection;
     public UnitOfWork() {
         DbConnect dbConnect = new DbConnect();
-        this.connection = dbConnect.connect();
+        this.connection = dbConnect.connect();  // .INSTANCE ?
         try {
             this.connection.setAutoCommit(false);
         } catch (SQLException e) {
@@ -70,5 +70,10 @@ public class UnitOfWork {
         }
         throw new DataAccessException("UnitOfWork hat keine aktive Connection zur Verfügung");
     }
+/*
+    @Override
+    public void close() throws Exception {
+        this.finishWork();
+    }  */
 }
 
