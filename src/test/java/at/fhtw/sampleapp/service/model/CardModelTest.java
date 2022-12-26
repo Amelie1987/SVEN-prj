@@ -2,10 +2,6 @@ package at.fhtw.sampleapp.service.model;
 import at.fhtw.sampleapp.model.Cards;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CardModelTest {

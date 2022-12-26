@@ -1,20 +1,15 @@
 package at.fhtw.sampleapp.service.packages;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+
 public class PackagesTest {
 
-    //test if there is an error, when a card is double in a package
+    //test if there is a409 - conflict error, when a card is double in a package
     @Test
     void testPackagesServiceInsertDoubleCard() throws Exception {
         URL url = new URL("http://localhost:10001/packages");
@@ -46,7 +41,7 @@ public class PackagesTest {
         }
     }
 
-    //test if there is bad request when no cards are send = no body set
+    //test if there is 400 - bad request  when no cards are send = no body set
     @Test
     void testPackagesServiceInsertNoCards() throws Exception {
         PackagesService packagesService = new PackagesService();
@@ -67,7 +62,7 @@ public class PackagesTest {
         }
     }
 
-    //test if there is an error, when it is not the admins token
+    //test if there is 403 - forbidden error, when it is not the admins token
     @Test
     void testPackagesServiceNoAdminToken() throws Exception {
         URL url = new URL("http://localhost:10001/packages");
