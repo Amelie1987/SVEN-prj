@@ -26,7 +26,7 @@ public class TokenModelTest {
 
     //test isAdmin()
     @Test
-    void testTokenModelisAdmin() {
+    void testTokenModelIsAdmin() {
         Token token = new Token("Basic amelie-mtcgToken");
         assertFalse(token.isAdmin());
 

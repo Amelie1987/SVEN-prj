@@ -17,10 +17,10 @@ public class DbConnect {
             connection = DriverManager.getConnection(url);
          //   String driver = DriverManager.getDrivers().getClass().getName(); //debug
           //  System.out.println("Connected to DB" + connection);
-        } catch(SQLException ex) {
-            System.out.println("SQLException: " + ex.getMessage());
-            System.out.println("SQLState: " + ex.getSQLState());
-            System.out.println("VendorError: " + ex.getErrorCode());
+        } catch(SQLException e) {
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("VendorError: " + e.getErrorCode());
 
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);

@@ -34,6 +34,10 @@ public class Users {
     @JsonAlias({"Coins"})
     private Integer coins;
 
+    private Integer deck_id;
+
+    private Boolean lost = false;
+
     // Jackson needs the default constructor
     public Users() {}
 
@@ -128,5 +132,21 @@ public class Users {
 
     public Integer getCoins() {
         return coins;
+    }
+
+    public Integer getDeck_id() {
+        return deck_id;
+    }
+
+    public void setDeck_id(Integer deck_id) {
+        this.deck_id = deck_id;
+    }
+
+    public Boolean getLost() {
+        return lost;
+    }
+
+    public void setLost(Boolean lost) {
+        this.lost = lost;
     }
 }

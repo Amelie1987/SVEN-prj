@@ -1,14 +1,10 @@
 package at.fhtw.sampleapp.service.users;
 
-import at.fhtw.db.DbConnect;
 import at.fhtw.sampleapp.dal.UnitOfWork;
-import at.fhtw.sampleapp.model.Cards;
 import at.fhtw.sampleapp.model.Users;
 import at.fhtw.sampleapp.model.Token;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class UsersDAL {
     public UsersDAL() {
@@ -223,11 +219,13 @@ public class UsersDAL {
         }
         try {
            PreparedStatement sqlStatement = unitOfWork.prepareStatement(
-                   "INSERT INTO users (username,password, elo, coins) VALUES (?,?,?,?)");
+                   "INSERT INTO users (username,password, elo, wins, losses, coins) VALUES (?,?,?,?,?,?)");
             sqlStatement.setString(1, users.getUsername());
             sqlStatement.setString(2, users.getPassword());
             sqlStatement.setInt(3, 100);
-            sqlStatement.setInt(4, 20);
+            sqlStatement.setInt(4,0);
+            sqlStatement.setInt(5,0);
+            sqlStatement.setInt(6, 20);
             sqlStatement.executeUpdate();
             unitOfWork.commitTransaction();
             sqlStatement.close();

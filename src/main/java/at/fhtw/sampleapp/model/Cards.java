@@ -22,7 +22,6 @@ public class Cards {
 
     private String type;
 
-
     // Jackson needs the default constructor
     public Cards(){}
     public Cards(String card_id, String name, Integer damage) {
@@ -35,6 +34,9 @@ public class Cards {
             this.type = tmp[0];
         } else {
             this.element = tmp[0];
+            if(this.element.equals("Regular")){
+                this.element = "Normal";
+            }
             this.type = tmp[1];
         }
 
@@ -70,6 +72,17 @@ public class Cards {
 
     public void setName(String name) {
         this.name = name;
+        String[] tmp = name.split("(?=\\p{Upper})", 2);
+        if(tmp.length == 1){
+            this.element = "Normal";  //better null?
+            this.type = tmp[0];
+        } else {
+            this.element = tmp[0];
+            if(this.element.equals("Regular")){
+                this.element = "Normal";
+            }
+            this.type = tmp[1];
+        }
     }
 
     public Integer getDamage() {

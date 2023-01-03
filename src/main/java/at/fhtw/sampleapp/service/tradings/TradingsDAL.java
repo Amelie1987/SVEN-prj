@@ -16,9 +16,7 @@ public class TradingsDAL {
     public Integer executeDeals(Token token, Trade trade, String cardString) throws SQLException {
         //trade.card_id = card in "store" card.card_id = card offer from request
         UnitOfWork unitOfWork = new UnitOfWork();
-        Users offerUser = new Users();
         Users buyUser = new Users();
-        Cards offeredCard = new Cards();    // card from trade in DB - needed?
         Cards buyersCard = new Cards();     // Card from buyer in request
         int deck_id;
         if(token.getUsername() == null){          //wrong, invalid token
@@ -41,7 +39,6 @@ public class TradingsDAL {
             } else {
                 buyUser.setId(resultSet.getInt(1));
             }
-          //  System.out.println("createDeals - user_id = " + user.getId());
             sqlStatement.close();
         } catch ( SQLException e){
             System.out.println("SQL SELECT Exception: " + e.getMessage());
@@ -53,11 +50,14 @@ public class TradingsDAL {
                     "SELECT card_id,user_id,type,mindamage FROM tradingdeals WHERE trade_id = ?");
             prepStatement.setString(1, trade.getTrade_id());
             ResultSet tradeSet = prepStatement.executeQuery();
-            while(tradeSet.next()){
-                trade.setCard_id(tradeSet.getString(1));
-                trade.setUser_id(tradeSet.getInt(2));
-                trade.setName(tradeSet.getString(3));
-                trade.setMinDamage(tradeSet.getInt(4));
+            if(tradeSet.next() == false) {
+                System.out.println("This deal does not exists!");
+                return 404;
+            } else {
+                    trade.setCard_id(tradeSet.getString(1));
+                    trade.setUser_id(tradeSet.getInt(2));
+                    trade.setName(tradeSet.getString(3));
+                    trade.setMinDamage(tradeSet.getInt(4));
             }
             System.out.println("ExecuteDeal found trade. Min Dmg should be: " + trade.getMinDamage());
             // check if card is in users stack (offerer)
@@ -122,6 +122,22 @@ public class TradingsDAL {
                 return 403;
             }
             //check if card has minDamage
+            PreparedStatement prepStatement = unitOfWork.prepareStatement(
+                    "SELECT damage FROM cards WHERE card_id = ?");
+            prepStatement.setString(1, buyersCard.getCard_id());
+            ResultSet resultSet = prepStatement.executeQuery();
+            if(resultSet.next() == false) {
+                System.out.println("executeDeal - error: the card_id from buyer does not exists");
+                return 404;
+            } else {
+                buyersCard.setDamage(resultSet.getInt(1));
+            }
+            System.out.println("Buyers Card Dmg: " + buyersCard.getDamage() + " minDmg from tradeingdeal: " + trade.getMinDamage());
+             if(trade.getMinDamage() > buyersCard.getDamage()) {
+                 System.out.println("Buyers Card Dmg: " + buyersCard.getDamage() + " minDmg from tradeingdeal: " + trade.getMinDamage()
+                 + " ERROR: deal not allowed.");
+                 return 403;
+             }
             //delete card from offering users stack
             PreparedStatement preparedStatement = unitOfWork.prepareStatement(
                     "DELETE FROM stack WHERE user_id = ? AND card_id = ?");
